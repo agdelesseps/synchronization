@@ -4,7 +4,7 @@
 # 2. Determine necessary shift to align each 30 minute (or less) pair of audio files.  Save shift directions to text file.
 # 3. (Future development) Directly trim and shift MP4 files.
 
-# Takes command line argument, e.g. python3 audio_align.py Amphawa/08272022/C0002
+# Takes command line argument, e.g. python3 audio_align.py Data/Amphawa/08272022/C0002
 # Relies heavily on https://github.com/benfmiller/audalign/wiki/Alignment-Functions-Details
 
 import audalign as ad, os, soundfile as sf, sys
@@ -13,6 +13,11 @@ from typing import List, Tuple
 
 FPS = 48000
 CHUNK_SECONDS = 30*60
+TEST_SECONDS = 60
+
+# # for testing chunk breakup on shorter recordings:
+# CHUNK_SECONDS = 20
+# TEST_SECONDS = 10
 
 def extract_audio(in_folder: str, out_superfolder: str) -> int:
     """
@@ -47,21 +52,25 @@ def extract_audio(in_folder: str, out_superfolder: str) -> int:
 
     if left_n_full_chunks > 0:
         for i in range(left_n_full_chunks):
-            chunk_audio = left_audio[i*CHUNK_SECONDS*FPS:(i+1)*CHUNK_SECONDS*FPS,:]
+            chunk_audio = left_audio[i*CHUNK_SECONDS*FPS:(i*CHUNK_SECONDS+TEST_SECONDS)*FPS,:]
             sf.write(f"{out_superfolder}/{i+1}/left.wav", chunk_audio, FPS)
-        chunk_audio = left_audio[left_n_full_chunks*CHUNK_SECONDS*FPS:,:]
+        last = min(left_audio.shape[0], (left_n_full_chunks*CHUNK_SECONDS+TEST_SECONDS)*FPS)
+        chunk_audio = left_audio[left_n_full_chunks*CHUNK_SECONDS*FPS:last,:]
         sf.write(f"{out_superfolder}/{left_n_full_chunks+1}/left.wav", chunk_audio, FPS)
     else:
-        sf.write(f"{out_superfolder}/1/left.wav", left_audio, FPS)
+        last = min(left_audio.shape[0], TEST_SECONDS*FPS)
+        sf.write(f"{out_superfolder}/1/left.wav", left_audio[:last,:], FPS)
     
     if right_audio.shape[0] > CHUNK_SECONDS * FPS:
         for i in range(right_n_full_chunks):
-            chunk_audio = right_audio[i*CHUNK_SECONDS*FPS:(i+1)*CHUNK_SECONDS*FPS,:]
+            chunk_audio = right_audio[i*CHUNK_SECONDS*FPS:(i*CHUNK_SECONDS+TEST_SECONDS)*FPS,:]
             sf.write(f"{out_superfolder}/{i+1}/right.wav", chunk_audio, FPS)
-        chunk_audio = left_audio[right_n_full_chunks*CHUNK_SECONDS*FPS:,:]
+        last = min(right_audio.shape[0], (right_n_full_chunks*CHUNK_SECONDS+TEST_SECONDS)*FPS)
+        chunk_audio = right_audio[right_n_full_chunks*CHUNK_SECONDS*FPS:last,:]
         sf.write(f"{out_superfolder}/{right_n_full_chunks+1}/right.wav", chunk_audio, FPS)
     else:
-        sf.write(f"{out_superfolder}/1/right.wav", right_audio, FPS)
+        last = min(right_audio.shape[0], TEST_SECONDS*FPS)
+        sf.write(f"{out_superfolder}/1/right.wav", right_audio[:last,:], FPS)
     
     return n_subfolders
 
@@ -116,10 +125,10 @@ def main(in_folder: str) -> None:
     results = align_many_chunks(superfolder, n_subfolders)
 
     with open(f"{in_folder}/time_shifts.txt", "w") as f:
-        f.write("Seconds to be added to (left, right) in each pair of chunks:\n")
+        f.write("Seconds to be added to (left, right) in each pair of chunks (shifts independent of each other):\n")
         f.writelines(f"{results}")
     
-    print(f"\nTime shifts in {in_folder}/time_shifts.txt.")
+    print(f"\nAbsolute time shifts in {in_folder}/time_shifts.txt.")
 
 # this if statement prevents multiprocessing errors
 if __name__ == "__main__":
