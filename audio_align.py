@@ -4,7 +4,7 @@
 # 2. Determine necessary shift to align each 30 minute (or less) pair of audio files.  Save shift directions to text file.
 # 3. (Future development) Directly trim and shift MP4 files.
 
-# Takes command line argument, e.g. python3 audio_align.py Data/Amphawa/08272022/C0002
+# Takes command line argument, e.g. python3 audio_align.py <left file> <right file>
 # Relies heavily on https://github.com/benfmiller/audalign/wiki/Alignment-Functions-Details
 
 import audalign as ad, os, soundfile as sf, sys
@@ -19,7 +19,7 @@ TEST_SECONDS = 60
 # CHUNK_SECONDS = 20
 # TEST_SECONDS = 10
 
-def extract_audio(in_folder: str, out_superfolder: str) -> int:
+def extract_audio(left_infile: str, right_infile: str, out_superfolder: str) -> int:
     """
     Extract audio from MP4 files, separate into 30-minute chunks if necessary, and save as pairs of .wav files in folders.
 
@@ -33,8 +33,8 @@ def extract_audio(in_folder: str, out_superfolder: str) -> int:
     - number of subfolders
     """
 
-    left_clip = mp.VideoFileClip(f"{in_folder}/left.MP4")
-    right_clip = mp.VideoFileClip(f"{in_folder}/right.MP4")
+    left_clip = mp.VideoFileClip(left_infile)
+    right_clip = mp.VideoFileClip(right_infile)
 
     left_audio = left_clip.audio.to_soundarray(fps=FPS)
     right_audio = right_clip.audio.to_soundarray(fps=FPS)
@@ -110,25 +110,26 @@ def align_many_chunks(in_superfolder: str, n_subfolders: int) -> List[Tuple[floa
     
     return results
 
-def main(in_folder: str) -> None:
+def main(left_infile: str, right_infile: str) -> None:
     """
     
     """
 
-    print(f"\nExtracting audio from {in_folder}.")
+    print(f"\nExtracting audio from {left_infile} and {right_infile}.")
 
-    superfolder = f"{in_folder}/audio"
-    n_subfolders = extract_audio(in_folder, superfolder)
+    new_folder = f"Data/{left_infile.split('/')[-4:-1].join('-')}_{right_infile.split('/')[-4:-1].join('-')}"
+    superfolder = f"{new_folder}/audio"
+    n_subfolders = extract_audio(left_infile, right_infile, superfolder)
 
     print(f"\nAudio files in {superfolder}/audio.\n\nFinding time shifts to align {n_subfolders} pair(s) of chunks.\n")
     
     results = align_many_chunks(superfolder, n_subfolders)
 
-    with open(f"{in_folder}/time_shifts.txt", "w") as f:
+    with open(f"{new_folder}/time_shifts.txt", "w") as f:
         f.write("Seconds to be added to (left, right) in each pair of chunks (shifts independent of each other):\n")
         f.writelines(f"{results}")
     
-    print(f"\nAbsolute time shifts in {in_folder}/time_shifts.txt.")
+    print(f"\nAbsolute time shifts in {new_folder}/time_shifts.txt.")
 
 # this if statement prevents multiprocessing errors
 if __name__ == "__main__":
