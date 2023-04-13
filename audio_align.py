@@ -117,7 +117,7 @@ def main(left_infile: str, right_infile: str) -> None:
 
     print(f"\nExtracting audio from {left_infile} and {right_infile}.")
 
-    new_folder = f"Data/{left_infile.split('/')[-4:-1].join('-')}_{right_infile.split('/')[-4:-1].join('-')}"
+    new_folder = f"Data/{('-').join(left_infile.split('/')[-4:-1])}_{('-').join(right_infile.split('/')[-4:-1].join)}"
     superfolder = f"{new_folder}/audio"
     n_subfolders = extract_audio(left_infile, right_infile, superfolder)
 
