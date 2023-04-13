@@ -133,7 +133,7 @@ def main(left_infile: str, right_infile: str) -> None:
 
 # this if statement prevents multiprocessing errors
 if __name__ == "__main__":
-    main(sys.argv[1])
+    main(sys.argv[1], sys.argv[2])
 
 #Amphawa/08272022/C0002 done
 #Amphawa/08272022/C0003 done
