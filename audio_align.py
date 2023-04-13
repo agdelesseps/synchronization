@@ -44,11 +44,11 @@ def extract_audio(left_infile: str, right_infile: str, out_superfolder: str) -> 
     n_subfolders = max(left_n_full_chunks, right_n_full_chunks) + 1
 
     if not os.path.exists(out_superfolder):
-        os.mkdir(out_superfolder)
+        os.makedirs(out_superfolder)
 
     for i in range(n_subfolders):
         if not os.path.exists(f"{out_superfolder}/{i+1}"):
-            os.mkdir(f"{out_superfolder}/{i+1}")
+            os.makedirs(f"{out_superfolder}/{i+1}")
 
     if left_n_full_chunks > 0:
         for i in range(left_n_full_chunks):
