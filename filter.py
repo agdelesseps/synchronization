@@ -13,7 +13,6 @@ def load_audio(infile: str, seconds_range: Tuple[float,float]) -> np.ndarray:
             end = seconds_range[1]
         else:
             end = audio.shape[0]
-        breakpoint()
         audio = audio[start*FPS:end*FPS,:]
     return audio
 
