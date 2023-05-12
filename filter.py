@@ -3,6 +3,8 @@ from scipy.io.wavfile import write
 from typing import Tuple
 
 FPS = 44100
+HP_FREQ = 7500
+LP_FREQ = 8500
 
 def load_audio(infile: str, seconds_range: Tuple[float,float]) -> np.ndarray:
     clip = mp.VideoFileClip(infile)
@@ -16,19 +18,21 @@ def load_audio(infile: str, seconds_range: Tuple[float,float]) -> np.ndarray:
         audio = audio[start*FPS:end*FPS,:]
     return audio
 
-def highpass_filter(audio: np.ndarray, freq: float) -> np.ndarray:
+def filter(audio: np.ndarray) -> np.ndarray:
     if len(audio.shape) == 2:
         mono = np.mean(audio, axis=1)
     else:
         mono = audio
-    sos = scipy.signal.butter(4, freq, btype="highpass", fs=FPS, output="sos")
+    sos = scipy.signal.butter(4, HP_FREQ, btype="highpass", fs=FPS, output="sos")
     filtered = scipy.signal.sosfilt(sos, mono)
+    sos = scipy.signal.butter(4, LP_FREQ, btype="lowpass", fs=FPS, output="sos")
+    filtered = scipy.signal.sosfilt(sos, filtered)
     return filtered
 
-def main(infile, freq = 4, seconds_range: Tuple[float,float] = None) -> None:
+def main(infile, seconds_range: Tuple[float,float] = None) -> None:
     outname = f"Data/{'_'.join(infile.split('/'))}_filtered"
     audio = load_audio(infile, seconds_range)
-    filtered = highpass_filter(audio, freq)
+    filtered = filter(audio)
     write(f"{outname}.wav", FPS, filtered)
     xscale = np.linspace(seconds_range[0], seconds_range[1], len(filtered)) if seconds_range is not None else np.linspace(0, len(filtered)/FPS, len(filtered))
     plt.plot(xscale, filtered)
@@ -42,7 +46,5 @@ if __name__ == "__main__":
         main(sys.argv[1], int(sys.argv[2]))
     elif len(sys.argv) == 4:
         main(sys.argv[1], int(sys.argv[2]), (int(sys.argv[3]),))
-    elif len(sys.argv) == 5:
-        main(sys.argv[1], int(sys.argv[2]), (int(sys.argv[3]), int(sys.argv[4])))
     else:
-        print("ERROR: too many arguments")
+        print("ERROR: wrong # arguments")
