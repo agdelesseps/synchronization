@@ -7,7 +7,7 @@
 # Takes command line argument, e.g. python3 audio_align.py <left file> <right file>
 # Relies heavily on https://github.com/benfmiller/audalign/wiki/Alignment-Functions-Details
 
-import audalign as ad, librosa, os, soundfile as sf, sys
+import audalign as ad, librosa, numpy as np, os, soundfile as sf, sys
 from moviepy import editor as mp
 from typing import List, Tuple
 
@@ -21,7 +21,7 @@ TEST_SECONDS = 60
 
 def load_m4a(infile: str) -> np.ndarray:
     # Load the M4A audio file
-    audio, sr = librosa.load(infile, sr=None, mono=False)
+    audio, _ = librosa.load(infile, sr=None, mono=False)
 
     # If the audio has multiple channels, select the first channel (mono)
     if audio.ndim > 1:
