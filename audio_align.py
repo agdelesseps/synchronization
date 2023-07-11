@@ -7,7 +7,7 @@
 # Takes command line argument, e.g. python3 audio_align.py <left file> <right file>
 # Relies heavily on https://github.com/benfmiller/audalign/wiki/Alignment-Functions-Details
 
-import audalign as ad, os, soundfile as sf, sys
+import audalign as ad, librosa, os, soundfile as sf, sys
 from moviepy import editor as mp
 from typing import List, Tuple
 
@@ -18,6 +18,16 @@ TEST_SECONDS = 60
 # # for testing chunk breakup on shorter recordings:
 # CHUNK_SECONDS = 20
 # TEST_SECONDS = 10
+
+def load_m4a(infile: str) -> np.ndarray:
+    # Load the M4A audio file
+    audio, sr = librosa.load(infile, sr=None, mono=False)
+
+    # If the audio has multiple channels, select the first channel (mono)
+    if audio.ndim > 1:
+        audio = audio[0]
+
+    return audio
 
 def extract_audio(left_infile: str, right_infile: str, out_superfolder: str) -> int:
     """
@@ -33,12 +43,18 @@ def extract_audio(left_infile: str, right_infile: str, out_superfolder: str) -> 
     - number of subfolders
     """
 
-    left_clip = mp.VideoFileClip(left_infile)
-    right_clip = mp.VideoFileClip(right_infile)
-
-    left_audio = left_clip.audio.to_soundarray(fps=FPS)
-    right_audio = right_clip.audio.to_soundarray(fps=FPS)
-
+    if left_infile[-3:] == "m4a":
+        left_audio = load_m4a(left_infile)
+    else:
+        left_clip = mp.VideoFileClip(left_infile)
+        left_audio = left_clip.audio.to_soundarray(fps=FPS)
+    
+    if right_infile[-3:] == "m4a":
+        right_audio = load_m4a(right_infile)
+    else:
+        right_clip = mp.VideoFileClip(right_infile)
+        right_audio = right_clip.audio.to_soundarray(fps=FPS)
+    
     left_n_full_chunks = left_audio.shape[0] // (CHUNK_SECONDS * FPS)
     right_n_full_chunks = right_audio.shape[0] // (CHUNK_SECONDS * FPS)
     n_subfolders = max(left_n_full_chunks, right_n_full_chunks) + 1
