@@ -48,12 +48,16 @@ def extract_audio(left_infile: str, right_infile: str, out_superfolder: str) -> 
     else:
         left_clip = mp.VideoFileClip(left_infile)
         left_audio = left_clip.audio.to_soundarray(fps=FPS)
+    if len(left_audio.shape) == 2:
+        left_audio = left_audio.mean(axis=1)
     
     if right_infile[-3:] == "m4a":
         right_audio = load_m4a(right_infile)
     else:
         right_clip = mp.VideoFileClip(right_infile)
         right_audio = right_clip.audio.to_soundarray(fps=FPS)
+    if len(right_audio.shape) == 2:
+        right_audio = right_audio.mean(axis=1)
     
     left_n_full_chunks = left_audio.shape[0] // (CHUNK_SECONDS * FPS)
     right_n_full_chunks = right_audio.shape[0] // (CHUNK_SECONDS * FPS)
@@ -68,25 +72,31 @@ def extract_audio(left_infile: str, right_infile: str, out_superfolder: str) -> 
 
     if left_n_full_chunks > 0:
         for i in range(left_n_full_chunks):
-            chunk_audio = left_audio[i*CHUNK_SECONDS*FPS:(i*CHUNK_SECONDS+TEST_SECONDS)*FPS,:]
+            #chunk_audio = left_audio[i*CHUNK_SECONDS*FPS:(i*CHUNK_SECONDS+TEST_SECONDS)*FPS,:]
+            chunk_audio = left_audio[i*CHUNK_SECONDS*FPS:(i*CHUNK_SECONDS+TEST_SECONDS)*FPS]
             sf.write(f"{out_superfolder}/{i+1}/left.wav", chunk_audio, FPS)
         last = min(left_audio.shape[0], (left_n_full_chunks*CHUNK_SECONDS+TEST_SECONDS)*FPS)
-        chunk_audio = left_audio[left_n_full_chunks*CHUNK_SECONDS*FPS:last,:]
+        #chunk_audio = left_audio[left_n_full_chunks*CHUNK_SECONDS*FPS:last,:]
+        chunk_audio = left_audio[left_n_full_chunks*CHUNK_SECONDS*FPS:last]
         sf.write(f"{out_superfolder}/{left_n_full_chunks+1}/left.wav", chunk_audio, FPS)
     else:
         last = min(left_audio.shape[0], TEST_SECONDS*FPS)
-        sf.write(f"{out_superfolder}/1/left.wav", left_audio[:last,:], FPS)
+        #sf.write(f"{out_superfolder}/1/left.wav", left_audio[:last,:], FPS)
+        sf.write(f"{out_superfolder}/1/left.wav", left_audio[:last], FPS)
     
     if right_audio.shape[0] > CHUNK_SECONDS * FPS:
         for i in range(right_n_full_chunks):
-            chunk_audio = right_audio[i*CHUNK_SECONDS*FPS:(i*CHUNK_SECONDS+TEST_SECONDS)*FPS,:]
+            #chunk_audio = right_audio[i*CHUNK_SECONDS*FPS:(i*CHUNK_SECONDS+TEST_SECONDS)*FPS,:]
+            chunk_audio = right_audio[i*CHUNK_SECONDS*FPS:(i*CHUNK_SECONDS+TEST_SECONDS)*FPS]
             sf.write(f"{out_superfolder}/{i+1}/right.wav", chunk_audio, FPS)
         last = min(right_audio.shape[0], (right_n_full_chunks*CHUNK_SECONDS+TEST_SECONDS)*FPS)
-        chunk_audio = right_audio[right_n_full_chunks*CHUNK_SECONDS*FPS:last,:]
+        #chunk_audio = right_audio[right_n_full_chunks*CHUNK_SECONDS*FPS:last,:]
+        chunk_audio = right_audio[right_n_full_chunks*CHUNK_SECONDS*FPS:last]
         sf.write(f"{out_superfolder}/{right_n_full_chunks+1}/right.wav", chunk_audio, FPS)
     else:
         last = min(right_audio.shape[0], TEST_SECONDS*FPS)
-        sf.write(f"{out_superfolder}/1/right.wav", right_audio[:last,:], FPS)
+        #sf.write(f"{out_superfolder}/1/right.wav", right_audio[:last,:], FPS)
+        sf.write(f"{out_superfolder}/1/right.wav", right_audio[:last], FPS)
     
     return n_subfolders
 
