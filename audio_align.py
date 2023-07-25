@@ -43,7 +43,7 @@ def extract_audio(left_infile: str, right_infile: str, out_superfolder: str) -> 
     - number of subfolders
     """
 
-    if left_infile[-3:] == "m4a":
+    if left_infile[-3:].lower() == "m4a":
         left_audio = load_m4a(left_infile)
     else:
         left_clip = mp.VideoFileClip(left_infile)
@@ -51,7 +51,7 @@ def extract_audio(left_infile: str, right_infile: str, out_superfolder: str) -> 
     if len(left_audio.shape) == 2:
         left_audio = left_audio.mean(axis=1)
     
-    if right_infile[-3:] == "m4a":
+    if right_infile[-3:].lower() == "m4a":
         right_audio = load_m4a(right_infile)
     else:
         right_clip = mp.VideoFileClip(right_infile)
